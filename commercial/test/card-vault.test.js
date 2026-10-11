@@ -28,6 +28,7 @@ test('legacy card backfill preserves identity, paid expiry and status; hash-only
   const store = new AccountStore({ directory, cardEncryptionKey: secret }); await store.init();
   const key = generateLicense(), id = 'a'.repeat(24);
   const account = { id, keyHash: licenseHash(key), hint: '…' + key.slice(-8), label: 'legacy', enabled: false, expiresAt: '2027-01-01T00:00:00.000Z', version: 2 };
+  const withoutCreationTime = ({ createdAt, ...rest }) => rest;
   await store.create(account);
   assert.throws(() => store.revealCard(id), { code: 'CARD_NOT_RECOVERABLE' });
   const app = createAccountService({ store, sessionSecret: '1'.repeat(64), adminKey: '2'.repeat(64), renewalUrl: 'https://example.com/renew' });
@@ -40,9 +41,9 @@ test('legacy card backfill preserves identity, paid expiry and status; hash-only
     const missing = await fetch(base + '/v1/admin/cards/' + 'b'.repeat(24) + '/key', { headers });
     assert.equal(missing.status, 404);
     await assert.rejects(store.saveCardKey(id, generateLicense()));
-    assert.deepEqual(store.byId(id), account);
+    assert.deepEqual(withoutCreationTime(store.byId(id)), account);
     await store.saveCardKey(id, key);
-    const { encryptedKey, ...unchanged } = store.byId(id); assert.deepEqual(unchanged, account);
+    const { encryptedKey, ...unchanged } = store.byId(id); assert.deepEqual(withoutCreationTime(unchanged), account);
     assert.equal(store.revealCard(id), key);
     assert.ok(!(await readFile(join(directory, 'license-snapshot.json'), 'utf8')).includes(key));
     store.cardEncryptionKey = '4'.repeat(64);
