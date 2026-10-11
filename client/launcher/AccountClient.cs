@@ -174,20 +174,22 @@ public sealed class AccountForm : MainForm
     {
         this.stateDirectory = stateDirectory;
         this.coreFactory = coreFactory ?? delegate { return new CoreService(); };
-        Text = "PureISP 1.1.3 — 授权版";
-        ClientSize = new Size(480, 490);
+        Text = "PureISP 1.1.4 — 授权版";
+        ClientSize = new Size(480, 546);
         openWebWhenReady = false;
         Controls.Remove(openWeb); trayWeb.Visible = false;
         foreach (Control control in Controls)
         {
             if (control.Text.StartsWith("浏览器自动")) control.Visible = false;
-            if (control is Button && control.Text.StartsWith("选择 /")) { control.Top = 302; chooseButton = (Button)control; }
-            if (control.Text.StartsWith("IDE 安装位置")) { control.Top = 346; idePathLabel = (Label)control; }
-            if (control.Text == "停止并退出") { control.Top = 420; stopButton = (Button)control; }
+            if (control is Button && control.Text.StartsWith("选择 /")) { control.Top = 388; chooseButton = (Button)control; }
+            if (control.Text.StartsWith("IDE 安装位置")) { control.Top = 430; idePathLabel = (Label)control; }
+            if (control.Text == "停止并退出") { control.Top = 482; stopButton = (Button)control; }
         }
         status.Bounds = new Rectangle(24, 196, 432, 56);
         status.Text = "填入授权卡密，点击启动即可使用。";
-        launchIde.Top = 258;
+        refreshTransit.Top = 258;
+        transitInfo.Bounds = new Rectangle(24, 300, 432, 36);
+        launchIde.Top = 344;
         licenseLabel.Text = "授权卡密"; licenseLabel.Bounds = new Rectangle(24, 68, 110, 24);
         licenseKey.Bounds = new Rectangle(24, 96, 332, 30); licenseKey.MaxLength = 100;
         licenseKey.UseSystemPasswordChar = true;
@@ -230,6 +232,11 @@ public sealed class AccountForm : MainForm
         licenseKey.Enabled = !busy && !service.IsRunning;
         launchIde.Enabled = trayIde.Enabled = !busy && service.IsRunning;
         chooseButton.Enabled = !busy;
+        UpdateTransitButton();
+    }
+    protected override bool CanRefreshTransit
+    {
+        get { return base.CanRefreshTransit && !busy && session != null && clock.IsRunning && session.IsUsable(anchor.Add(clock.Elapsed)); }
     }
     private static string NormalizeKey(string value) { return (value ?? "").Trim().ToUpperInvariant(); }
     private void ActivateAndConnect()

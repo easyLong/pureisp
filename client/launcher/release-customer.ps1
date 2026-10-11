@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 $taskRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $taskBase = Join-Path $taskRoot 'dist/PureISP-BS-Portable'
-$taskVersion = '1.1.3'
+$taskVersion = '1.1.4'
 $taskPackageRoot = Join-Path $taskRoot ("dist/PureISP-Client-v$taskVersion-Win64")
 $taskClientRoot = Join-Path $taskPackageRoot 'PureISP-Client'
 $taskZip = Join-Path $taskRoot ("dist/PureISP-Client-v$taskVersion-Win64.zip")

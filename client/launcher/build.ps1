@@ -13,6 +13,6 @@ $taskOutput = [IO.Path]::GetFullPath($OutputPath)
 [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($taskOutput)) | Out-Null
 $taskIcon = Join-Path $PSScriptRoot 'assets/pureisp.ico'
 if (-not (Test-Path -LiteralPath $taskIcon)) { & (Join-Path $PSScriptRoot 'build-icon.ps1') }
-& $taskCompiler /nologo /target:winexe /platform:anycpu /optimize+ /codepage:65001 "/out:$taskOutput" "/win32icon:$taskIcon" "/resource:$taskIcon,PureISP.Icon" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll $taskSource (Join-Path $PSScriptRoot 'SystemProxy.cs') (Join-Path $PSScriptRoot 'IdeLocator.cs')
+& $taskCompiler /nologo /target:winexe /platform:anycpu /optimize+ /codepage:65001 "/out:$taskOutput" "/win32icon:$taskIcon" "/resource:$taskIcon,PureISP.Icon" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.Web.Extensions.dll $taskSource (Join-Path $PSScriptRoot 'SystemProxy.cs') (Join-Path $PSScriptRoot 'IdeLocator.cs') (Join-Path $PSScriptRoot 'TransitSelector.cs')
 if ($LASTEXITCODE -ne 0) { throw 'PureISP launcher compilation failed.' }
 Write-Output "Built $taskOutput"

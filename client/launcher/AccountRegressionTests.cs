@@ -46,7 +46,7 @@ public static class AccountRegressionTests
     {
         ((TextBox)Field(form, "licenseKey")).Text = (string)info["licenseKey"];
         Click(form, "start"); Pump(delegate { return !(bool)Field(form, "busy"); });
-        Check(Core(form).IsRunning, "valid login starts actual Mihomo");
+        Check(Core(form).IsRunning, "valid login starts actual Mihomo" + (Core(form).IsRunning ? "" : ": " + ((Label)Field(form, "status", typeof(MainForm))).Text));
     }
     private static void License(Dictionary<string, object> info, bool enabled, DateTime expires)
     {
@@ -96,6 +96,8 @@ public static class AccountRegressionTests
             form.StartPosition = FormStartPosition.Manual; form.Location = new Point(-2000, -2000); form.Show(); Application.DoEvents();
             Check(!Core(form).IsRunning && current.SameAs(saved), "unlogged client neither starts proxy nor changes network");
             Check(!form.Controls.Contains((Control)Field(form, "openWeb", typeof(MainForm))) && !(bool)Field(form, "openWebWhenReady", typeof(MainForm)), "customer UI has no technical web console or automatic browser launch");
+            Button switchNetwork = (Button)Field(form, "refreshTransit", typeof(MainForm));
+            Check(form.Controls.Contains(switchNetwork) && switchNetwork.Text == "切换网络" && !switchNetwork.Enabled, "customer has a single network switch button, disabled before authorization");
             using (Bitmap bitmap = new Bitmap(form.Width, form.Height)) { form.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size)); bitmap.Save(Path.Combine(directory, "account-login.png")); }
             ((TextBox)Field(form, "licenseKey")).Text = "PUREISP-00000000-00000000-00000000-00000000";
             Click(form, "start"); Pump(delegate { return !(bool)Field(form, "busy"); });
@@ -106,6 +108,12 @@ public static class AccountRegressionTests
             byte[] cacheBytes = File.ReadAllBytes(Path.Combine(stateDirectory, "license-session.bin"));
             Check(!Encoding.UTF8.GetString(cacheBytes).Contains((string)info["licenseKey"]), "saved session is protected by Windows DPAPI");
             using (Bitmap bitmap = new Bitmap(form.Width, form.Height)) { form.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size)); bitmap.Save(Path.Combine(directory, "account-connected.png")); }
+            Check(switchNetwork.Enabled, "network switch is enabled only after authorization and core readiness");
+            foreach (Control control in form.Controls)
+                if (control.Visible) Check(form.ClientRectangle.Contains(control.Bounds), "visible customer controls fit within the panel: " + control.GetType().Name);
+            switchNetwork.PerformClick();
+            Pump(delegate { return !(bool)Field(form, "selectingTransit", typeof(MainForm)); });
+            Check(((Label)Field(form, "transitInfo", typeof(MainForm))).Text.Contains("配置不完整") && Core(form).IsRunning && current.SameAs(SystemProxyLease.Desired()), "missing transit group shows a user-facing error without stopping proxy or altering network settings");
             DateTime changedExpiry = DateTime.UtcNow.AddDays(40);
             License(info, true, changedExpiry); Click(form, "start"); Pump(delegate { return !(bool)Field(form, "busy"); });
             Check(DateTime.Parse(((AccountSession)Field(form, "session")).expiresAt).ToUniversalTime() > DateTime.UtcNow.AddDays(39), "manual refresh sees renewal immediately without relogin");

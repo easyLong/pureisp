@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 #if PAID_EDITION
-[assembly: System.Reflection.AssemblyVersion("1.1.3.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.1.3.0")]
+[assembly: System.Reflection.AssemblyVersion("1.1.4.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.1.4.0")]
 #else
 [assembly: System.Reflection.AssemblyVersion("1.0.4.0")]
 [assembly: System.Reflection.AssemblyFileVersion("1.0.4.0")]
@@ -83,6 +83,8 @@ public sealed class CoreService : IDisposable
     {
         get { lock (gate) { return ownedProcess != null && !ownedProcess.HasExited; } }
     }
+
+    public int ControllerPort { get { return controllerPort; } }
 
     public static bool PortOpen(int port)
     {
@@ -200,6 +202,10 @@ public class MainForm : Form
     protected readonly Label status = new Label();
     protected readonly Button openWeb = new Button();
     protected readonly Button launchIde = new Button();
+    protected readonly Button refreshTransit = new Button();
+    protected readonly Label transitInfo = new Label();
+    protected bool selectingTransit;
+    private CancellationTokenSource transitCancellation;
     private readonly IdeLocator ideLocator = IdeLocator.ForCurrentUser();
     private readonly Label idePath = new Label();
     private readonly ToolTip pathTip = new ToolTip();
@@ -229,7 +235,7 @@ public class MainForm : Form
         using (Stream iconStream = typeof(MainForm).Assembly.GetManifestResourceStream("PureISP.Icon"))
         using (Icon embedded = new Icon(iconStream)) Icon = (Icon)embedded.Clone();
         Text = "PureISP 1.0.4 — 双轨分流";
-        ClientSize = new Size(480, 416);
+        ClientSize = new Size(480, 494);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -241,21 +247,26 @@ public class MainForm : Form
         status.Bounds = new Rectangle(24, 68, 430, 48);
         status.Text = "正在启动代理内核…";
         Label description = new Label { Text = "浏览器自动使用双轨分流，IDE 从面板启动。\n✕ 收进托盘保持代理；停止并退出恢复原设置。", Bounds = new Rectangle(24, 118, 430, 48) };
-        ConfigureButton(openWeb, "打开 Web 控制台", 176);
-        ConfigureButton(launchIde, "启动 Antigravity IDE（独立代理）", 222);
+        ConfigureButton(refreshTransit, "切换网络", 176);
+        transitInfo.Bounds = new Rectangle(24, 216, 432, 32);
+        transitInfo.Text = "连接后可点击切换网络，自动选择可用线路。";
+        transitInfo.AutoEllipsis = true;
+        ConfigureButton(openWeb, "打开 Web 控制台", 252);
+        ConfigureButton(launchIde, "启动 Antigravity IDE（独立代理）", 298);
         Button chooseIde = new Button();
-        ConfigureButton(chooseIde, "选择 / 更换 IDE 路径", 268);
+        ConfigureButton(chooseIde, "选择 / 更换 IDE 路径", 344);
         idePath.Text = "IDE 安装位置：自动查找，也可手动选择。";
-        idePath.Bounds = new Rectangle(24, 310, 432, 36);
+        idePath.Bounds = new Rectangle(24, 386, 432, 36);
         idePath.AutoEllipsis = true;
         Button stop = new Button();
-        ConfigureButton(stop, "停止并退出", 354);
-        openWeb.Enabled = launchIde.Enabled = false;
+        ConfigureButton(stop, "停止并退出", 430);
+        openWeb.Enabled = launchIde.Enabled = refreshTransit.Enabled = false;
+        refreshTransit.Click += delegate { RefreshTransit(); };
         openWeb.Click += delegate { OpenWeb(); };
         launchIde.Click += delegate { LaunchIde(); };
         chooseIde.Click += delegate { ChooseIde(); };
         stop.Click += delegate { RequestExit(); };
-        Controls.AddRange(new Control[] { title, status, description, openWeb, launchIde, chooseIde, idePath, stop });
+        Controls.AddRange(new Control[] { title, status, description, refreshTransit, transitInfo, openWeb, launchIde, chooseIde, idePath, stop });
         if (startServices) Shown += delegate { StartServices(); };
         tray.Icon = Icon;
         tray.Text = "PureISP · 双轨分流";
@@ -339,10 +350,16 @@ public class MainForm : Form
 
     protected bool StopServices(bool shutdown)
     {
+        CancelTransitRefresh();
         try
         {
             systemProxy.Dispose();
             service.Stop(!shutdown);
+            if (!closing && !IsDisposed)
+            {
+                transitInfo.Text = "连接后可点击切换网络，自动选择可用线路。";
+                UpdateTransitButton();
+            }
             return true;
         }
         catch (Exception ex)
@@ -370,6 +387,7 @@ public class MainForm : Form
     {
         if (disposing)
         {
+            CancelTransitRefresh();
             Application.ApplicationExit -= OnApplicationExit;
             tray.Visible = false;
             tray.Dispose();
@@ -414,6 +432,7 @@ public class MainForm : Form
                     status.ForeColor = Color.LightGreen;
                     openWeb.Enabled = launchIde.Enabled = true;
                     trayWeb.Enabled = trayIde.Enabled = true;
+                    UpdateTransitButton();
                     if (openWebWhenReady) OpenWeb();
                     OnStartFinished(true);
                 });
@@ -423,6 +442,75 @@ public class MainForm : Form
     }
 
     protected virtual void OnStartFinished(bool success) { }
+
+    protected virtual bool CanRefreshTransit { get { return !closing && service.IsRunning; } }
+
+    protected void UpdateTransitButton()
+    {
+        refreshTransit.Enabled = CanRefreshTransit && !selectingTransit;
+        refreshTransit.Text = selectingTransit ? "正在切换…" : "切换网络";
+    }
+
+    private void CancelTransitRefresh()
+    {
+        if (transitCancellation != null)
+            try { transitCancellation.Cancel(); } catch (ObjectDisposedException) { }
+    }
+
+    private void ShowTransitProgress(string text, CancellationToken token)
+    {
+        if (closing || IsDisposed || token.IsCancellationRequested) return;
+        try { BeginInvoke((Action)delegate
+        {
+            if (closing || token.IsCancellationRequested) return;
+            transitInfo.ForeColor = Color.FromArgb(166, 185, 207);
+            transitInfo.Text = "正在检测可用线路，请稍候…";
+        }); } catch (InvalidOperationException) { }
+    }
+
+    private void RefreshTransit()
+    {
+        if (!CanRefreshTransit || selectingTransit) return;
+        CoreService currentCore = service;
+        CancellationTokenSource cancellation = new CancellationTokenSource();
+        transitCancellation = cancellation;
+        selectingTransit = true;
+        UpdateTransitButton();
+        transitInfo.ForeColor = Color.FromArgb(166, 185, 207);
+        transitInfo.Text = "正在切换网络，请稍候…";
+        Task.Factory.StartNew(delegate
+        {
+            TransitSelection result = null;
+            string error = null;
+            try
+            {
+                TransitSelector selector = new TransitSelector(currentCore.ControllerPort);
+                result = selector.Refresh(cancellation.Token, delegate(string text) { ShowTransitProgress(text, cancellation.Token); });
+                cancellation.Token.ThrowIfCancellationRequested();
+                if (!Object.ReferenceEquals(currentCore, service) || !currentCore.IsRunning) throw new OperationCanceledException();
+                selector.Apply(result, cancellation.Token);
+            }
+            catch (OperationCanceledException) { }
+            catch (InvalidOperationException ex) { error = ex.Message; }
+            catch (Exception) { error = "网络切换失败，请确认已连接后重试。"; }
+            if (closing || IsDisposed) { cancellation.Dispose(); return; }
+            try { BeginInvoke((Action)delegate
+            {
+                bool cancelled = cancellation.IsCancellationRequested || !Object.ReferenceEquals(currentCore, service) || !currentCore.IsRunning;
+                selectingTransit = false;
+                transitCancellation = null;
+                if (!cancelled)
+                {
+                    transitInfo.ForeColor = error == null && result != null ? Color.LightGreen : Color.LightCoral;
+                    transitInfo.Text = error ?? (result == null ? "网络切换已取消。" : "网络已切换 · 延迟 " + result.Delay + " ms");
+                    pathTip.SetToolTip(transitInfo, transitInfo.Text);
+                }
+                else transitInfo.Text = "网络切换已取消，连接后可重新尝试。";
+                cancellation.Dispose();
+                UpdateTransitButton();
+            }); } catch (InvalidOperationException) { cancellation.Dispose(); }
+        });
+    }
 
     private void OpenWeb()
     {

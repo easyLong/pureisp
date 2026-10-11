@@ -46,3 +46,18 @@
 ## 1.1.3 卡密版
 
 `AccountClient.cs` 是独立卡密入口，界面填卡密并点击“启动”，无需注册或账号密码。共用原 Core、IDE 路径和安全恢复，分流配置沿用原文件。使用 `build-account.ps1`、`test-account.ps1`、`release-account.ps1` 构建、验证和打包；部署见 [授权服务说明](../../commercial/README.md)。输出到独立 1.1.3 更新目录，保留历史版本。
+
+## 1.1.4 用户版切换网络
+
+用户面板提供一个“切换网络”入口，保留卡密启动、IDE 启动和停止退出；不显示 Web 控制台、管理员入口或节点列表。`TransitSelector.cs` 通过本地 Mihomo REST API 获取住宅前置中继组内的真实节点，逐次进行新测速：美国节点全部失败才测试日本，日本全部失败再测试其余前置节点；每个阶段选最低有效延迟。每个节点超时 2500ms，最多 4 个并发请求，不使用历史延迟或模拟数据。全局范围是配置允许的前置中继，排除住宅代理本身、DIRECT 和代理组，避免链路循环。地区根据节点名称中的国旗、中文和 US/JP 等标记识别，未识别的节点参加全局兜底。
+
+成功后只修改“住宅前置中继”组，并读取 `now` 确认选中结果；OpenAI 的分流组独立保留。美国、日本及其他中继都失败时不发送切换请求，保留当前线路。用户界面只显示切换进度、完成和延迟；策略和节点详情留在内部。停止、到期或退出会取消未完成的测速，后台请求不会阻塞界面。此按钮执行一次优选，已有长连接是否重新建立由应用决定；测速目标为 Cloudflare 204 页面，不能代表整条住宅链路的业务可用性。
+
+```powershell
+./client/launcher/test-transit.ps1
+./client/launcher/test-account.ps1
+./client/launcher/test.ps1
+./client/launcher/release-customer.ps1
+```
+
+完整加密客户包输出为 `dist/PureISP-Client-v1.1.4-Win64.zip`；源码仓库不包含真实代理配置或客户包。`account-service.json` 仍需由管理员填入实际 HTTPS 授权地址。升级时使用新的完整包，旧版 `config.enc` 与旧版 exe 配对，不能只替换一个文件。

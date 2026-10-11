@@ -1,13 +1,13 @@
 $ErrorActionPreference = 'Stop'
 $taskRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
-$taskRelease = Join-Path $taskRoot 'dist/PureISP-License-v1.1.3-Win64/PureISP-License-Update'
+$taskRelease = Join-Path $taskRoot 'dist/PureISP-License-v1.1.4-Win64/PureISP-License-Update'
 [IO.Directory]::CreateDirectory($taskRelease) | Out-Null
 & (Join-Path $PSScriptRoot 'build-account.ps1') -OutputPath (Join-Path $taskRelease 'PureISP.exe')
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'account-service.example.json') -Destination (Join-Path $taskRelease 'account-service.json') -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'ACCOUNT-USAGE.txt') -Destination (Join-Path $taskRelease 'USAGE.txt') -Force
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$taskZip = Join-Path $taskRoot 'dist/PureISP-License-v1.1.3-Win64.zip'
+$taskZip = Join-Path $taskRoot 'dist/PureISP-License-v1.1.4-Win64.zip'
 $taskTemporary = Join-Path $taskRoot ('dist/account-' + [Guid]::NewGuid().ToString('N') + '.zip')
 $taskArchive = [IO.Compression.ZipFile]::Open($taskTemporary, [IO.Compression.ZipArchiveMode]::Create)
 try {

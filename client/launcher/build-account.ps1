@@ -4,12 +4,13 @@ param(
     [string]$ConfigKeySource
 )
 $ErrorActionPreference = 'Stop'
-if (-not $OutputPath) { $OutputPath = Join-Path $PSScriptRoot '../../dist/PureISP-License-v1.1.3-Win64/PureISP-License-Update/PureISP.exe' }
+if (-not $OutputPath) { $OutputPath = Join-Path $PSScriptRoot '../../dist/PureISP-License-v1.1.4-Win64/PureISP-License-Update/PureISP.exe' }
 $taskDefines = 'PAID_EDITION'
 $taskSources = @(
     (Join-Path $PSScriptRoot 'PureISPLauncher.cs'),
     (Join-Path $PSScriptRoot 'SystemProxy.cs'),
     (Join-Path $PSScriptRoot 'IdeLocator.cs'),
+    (Join-Path $PSScriptRoot 'TransitSelector.cs'),
     (Join-Path $PSScriptRoot 'AccountClient.cs'),
     (Join-Path $PSScriptRoot 'ConfigCrypto.cs')
 )
