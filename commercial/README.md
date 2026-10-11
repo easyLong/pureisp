@@ -59,6 +59,8 @@ CARD_ID 来自列表，不是完整卡密。命令行日期须带时区；管理
 
 同机反向代理时设置 TRUST_PROXY=true，代理覆盖 X-Forwarded-For 为真实客户端地址；服务只信任回环来源。卡密验证每个 IP 每分钟最多 20 次。管理接口需独立 ADMIN_KEY，用户不需要管理页面或 9090 控制台。
 
+启动失败时，`npm start` 输出失败阶段和安全的错误提示，不输出数据库密码、连接串或 SQL。`CARD_ENCRYPTION_KEY` 必须是 64 位十六进制字符；`SESSION_SECRET` 和 `ADMIN_KEY` 各至少 64 位十六进制字符，三个密钥互不相同。`npm run setup` 保留已有 `.env`，复制模板后仍保留的 `CHANGE_ME` 不会被自动覆盖。检查已有密钥时不要删除 `.env` 或重新生成有效密钥。MySQL 的 `ER_ACCESS_DENIED_ERROR` 表示账号密码验证失败，`ER_SPECIFIC_ACCESS_DENIED_ERROR` 表示初始化权限不足，`ETIMEDOUT` 表示连接超时，需要检查 RDS 白名单和网络。
+
 ```dotenv
 ACCOUNT_STORE=mysql
 MYSQL_URL=mysql://USER:PASSWORD@RDS_HOST:3306/pureisp
