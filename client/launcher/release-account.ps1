@@ -25,7 +25,7 @@ try {
     $taskServiceRoot = Join-Path $taskRoot 'commercial'
     Get-ChildItem -LiteralPath $taskServiceRoot -Recurse -File | ForEach-Object {
         $taskRelative = $_.FullName.Substring($taskServiceRoot.Length + 1).Replace('\','/')
-        if ($taskRelative -in @('package.json','package-lock.json','.env.example','README.md') -or $taskRelative.StartsWith('src/') -or $taskRelative.StartsWith('scripts/') -or $taskRelative.StartsWith('public/') -or $taskRelative.StartsWith('test/')) {
+        if ($taskRelative -in @('package.json','package-lock.json','.env.example','README.md','start.sh','stop.sh','restart.sh','status.sh','logs.sh') -or $taskRelative.StartsWith('src/') -or $taskRelative.StartsWith('scripts/') -or $taskRelative.StartsWith('public/') -or $taskRelative.StartsWith('test/')) {
             [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($taskArchive, $_.FullName, ('PureISP-License-Service/' + $taskRelative), [IO.Compression.CompressionLevel]::Optimal) | Out-Null
         }
     }

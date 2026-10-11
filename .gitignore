@@ -1,6 +1,8 @@
 node_modules/
 commercial/.env
 commercial/data/
+commercial/run/
+commercial/logs/
 dist/
 *.zip
 *.enc

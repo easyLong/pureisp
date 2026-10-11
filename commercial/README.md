@@ -55,6 +55,25 @@ CARD_ID 来自列表，不是完整卡密。命令行日期须带时区；管理
 
 ## 服务器与 MySQL
 
+Linux 上可使用目录中的基础运维脚本，以 `nohup` 和 `setsid` 脱离终端后台运行，不依赖 systemd 或 PM2。先执行 `npm ci`、`npm run setup` 并配置 `.env`；如果之前通过 `npm start` 前台运行，先在原终端按 Ctrl+C 停止，再使用以下脚本：
+
+```bash
+chmod +x start.sh stop.sh restart.sh status.sh logs.sh
+./start.sh    # 后台启动，关闭 SSH 终端后继续运行
+./status.sh   # 查看本脚本管理的进程及运行时间
+./logs.sh     # 查看最近 100 行并持续跟踪，Ctrl+C 仅退出日志查看
+./restart.sh  # 停止后重新启动，重新加载 .env
+./stop.sh     # 向本服务发送 SIGTERM，等待正常退出
+```
+
+脚本可以从任何工作目录调用。PID 保存在 `run/pureisp.pid`，日志追加到 `logs/pureisp.log`，二者不会提交 GitHub 或打入发布包。重复启动不会多开，停止前校验进程属于本目录；脚本使用 Linux 的 `flock` 防止启动、停止同时操作。`flock` 和 `setsid` 通常由系统自带的 util-linux 提供。`status.sh` 检查进程是否存在，实际接口就绪仍需通过健康检查确认：
+
+```bash
+curl -i http://127.0.0.1:3610/health
+```
+
+若修改了 `PORT`，使用对应端口。`start.sh` 启动后先等待 2 秒检查进程；MySQL 初始化可能需要更久，以日志中的 `listening on` 和健康接口为准。脚本不会自动安装依赖、生成密钥、设置开机启动或在进程崩溃后自动拉起。日志持续追加，需要运维时自行归档。
+
 服务器执行 npm ci 和 npm run setup，通过 HTTPS 反向代理转发到 127.0.0.1:3610，修改 .env 的 RENEWAL_URL 和客户端的两个 HTTPS 地址。客户端拒绝远程明文 HTTP；授权走直连，代理尚未启动也能验证。
 
 同机反向代理时设置 TRUST_PROXY=true，代理覆盖 X-Forwarded-For 为真实客户端地址；服务只信任回环来源。卡密验证每个 IP 每分钟最多 20 次。管理接口需独立 ADMIN_KEY，用户不需要管理页面或 9090 控制台。
@@ -92,6 +111,8 @@ URL 中账号密码特殊字符需编码，设置 CA 后校验 RDS 证书。优�
 
 ```powershell
 npm test
+# Linux 基础运维脚本集成测试（临时文件存储和随机端口，不读取真实 .env）
+# bash test/test-ops.sh
 # 在项目根目录
 ./client/launcher/test-account.ps1
 ./client/launcher/test.ps1
