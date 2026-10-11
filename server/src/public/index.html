@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PureISP 官网 - 100% 纯净原生静态住宅网络 | 跨境电商 & AI 双轨专线</title>
+  <meta name="description" content="PureISP 专为跨境电商卖家、海外社媒矩阵与出海开发者打造的独享静态住宅网络客户端。AT&T 原生家庭宽带出口，0 欺诈分，智能双轨分流杜绝 ChatGPT 403 阻断。">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #070a12;
+      --bg-surface: #0e1526;
+      --card-bg: rgba(14, 21, 38, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --emerald: #10b981;
+      --emerald-light: #34d399;
+      --emerald-glow: rgba(16, 185, 129, 0.35);
+      --cyan: #0ea5e9;
+      --cyan-light: #38bdf8;
+      --cyan-glow: rgba(14, 165, 233, 0.3);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-sub: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Background Glow */
+    .ambient-glow {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1000px;
+      height: 550px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(14, 165, 233, 0.08) 40%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Navbar */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      background: rgba(7, 10, 18, 0.8);
+      border-bottom: 1px solid var(--card-border);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 76px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #fff;
+    }
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(14, 165, 233, 0.25) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+    }
+    .brand-name {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .brand-name span { color: var(--emerald-light); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #fff; }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.04);
+      color: #fff;
+      border: 1px solid var(--card-border);
+    }
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 20px var(--emerald-glow);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+    }
+    .btn-large {
+      padding: 16px 36px;
+      font-size: 16px;
+      border-radius: 16px;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 90px 0 60px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 30px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--emerald-light);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      max-width: 900px;
+      margin: 0 auto 24px;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #ffffff 30%, var(--emerald-light) 75%, var(--cyan-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+    .hero-cta-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+    .hero-meta-text {
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    /* Live Trust Badges */
+    .trust-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      margin-top: 50px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+    .trust-icon { color: var(--emerald-light); }
+
+    /* Interactive Live Demo Card */
+    .demo-section {
+      padding: 40px 0 80px;
+    }
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(24px);
+      border-radius: 28px;
+      padding: 36px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      align-items: center;
+    }
+    @media (max-width: 860px) {
+      .demo-grid { grid-template-columns: 1fr; }
+    }
+    .demo-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--cyan-light);
+      background: rgba(14, 165, 233, 0.15);
+      padding: 4px 10px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    .demo-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 14px;
+    }
+    .demo-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    /* Live Output Box */
+    .output-box {
+      background: #090d16;
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .output-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+    }
+    .output-row:last-child { border-bottom: none; }
+    .out-label { color: var(--text-sub); }
+    .out-val { font-weight: 700; color: #fff; }
+    .out-val.green { color: var(--emerald-light); }
+    .out-val.cyan { color: var(--cyan-light); }
+
+    /* Features Section */
+    .features {
+      padding: 80px 0;
+    }
+    .section-head {
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto 60px;
+    }
+    .section-head h2 {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+    .section-head p {
+      font-size: 16px;
+      color: var(--text-muted);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+    @media (max-width: 960px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px;
+      transition: all 0.3s;
+    }
+    .feature-card:hover {
+      border-color: rgba(16, 185, 129, 0.3);
+      transform: translateY(-4px);
+    }
+    .feat-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+    .feat-card h3 {
+      font-size: 19px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .feat-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Dual Track Architecture Diagram */
+    .arch-section {
+      padding: 80px 0;
+    }
+    .arch-card {
+      background: linear-gradient(135deg, rgba(14, 21, 38, 0.9) 0%, rgba(9, 13, 22, 0.9) 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 48px;
+      position: relative;
+    }
+    .arch-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      margin-top: 36px;
+    }
+    @media (max-width: 768px) {
+      .arch-grid { grid-template-columns: 1fr; }
+    }
+    .track-box {
+      border-radius: 20px;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .track-box.track-resi {
+      border-color: rgba(16, 185, 129, 0.3);
+      background: radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.08) 0%, transparent 60%);
+    }
+    .track-box.track-ai {
+      border-color: rgba(14, 165, 233, 0.3);
+      background: radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.08) 0%, transparent 60%);
+    }
+    .track-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    .badge-green { background: rgba(16, 185, 129, 0.2); color: var(--emerald-light); }
+    .badge-cyan { background: rgba(14, 165, 233, 0.2); color: var(--cyan-light); }
+
+    /* Pricing Section */
+    .pricing {
+      padding: 80px 0;
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+    @media (max-width: 960px) {
+      .pricing-grid { grid-template-columns: 1fr; }
+    }
+    .price-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 26px;
+      padding: 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+    .price-card.featured {
+      border-color: var(--emerald);
+      box-shadow: 0 0 40px rgba(16, 185, 129, 0.15);
+      background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.1) 0%, var(--card-bg) 60%);
+    }
+    .featured-tag {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--emerald);
+      color: #000;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 14px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+    .plan-name { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .plan-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; min-height: 40px; }
+    .plan-price {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .plan-price span { font-size: 15px; color: var(--text-sub); font-weight: 500; }
+    .plan-features {
+      list-style: none;
+      margin-bottom: 32px;
+    }
+    .plan-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+    }
+    .check-icon { color: var(--emerald-light); font-weight: 800; }
+
+    /* Download Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-card {
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 36px;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+      text-align: center;
+      position: relative;
+    }
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: var(--text-sub);
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .close-btn:hover { color: #fff; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 50px 0 40px;
+      margin-top: 80px;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container nav-inner">
+      <a href="#" class="brand">
+        <div class="brand-logo">🛡️</div>
+        <div class="brand-name">Pure<span>ISP</span></div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#features">核心特性</a></li>
+        <li><a href="#dual-track">双轨分流</a></li>
+        <li><a href="#demo">纯净度实测</a></li>
+        <li><a href="#pricing">套餐定价</a></li>
+        <li><a href="#faq">常见问题</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="/console" class="btn btn-outline" style="border-color: #10b981; color: #34d399; text-decoration: none;" target="_blank">🖥️ Web 控制台</a>
+        <button class="btn btn-outline" onclick="openDownloadModal()">下载客户端</button>
+        <a href="#pricing" class="btn btn-primary">立即选购卡密</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span>✨</span> 2026 商业化原生静态住宅网络升级版
+      </div>
+      
+      <h1>
+        100% 原生静态住宅 IP<br>
+        <span class="gradient-text">跨境出海与 AI 双轨加速新标杆</span>
+      </h1>
+
+      <p>
+        专为亚马逊/TikTok 店铺卖家、海外社媒矩阵与出海开发者打造。独享美国家庭宽带出口，0 欺诈分防关联，独创智能双轨分流技术，彻底终结住宅 IP 访问 ChatGPT 403 阻断难题。
+      </p>
+
+      <div class="hero-cta-box">
+        <button class="btn btn-primary btn-large" onclick="openDownloadModal()">
+          <span>⚡</span> 下载 PureISP 客户端 (Windows)
+        </button>
+        <a href="#demo" class="btn btn-outline btn-large">
+          <span>🔍</span> 查看实时出口检测证明
+        </a>
+      </div>
+
+      <div class="hero-meta-text">
+        支持 Windows 10/11 64位 · 绿色便携 / 安装版双版本 · 开箱即用免配网络
+      </div>
+
+      <!-- Trust Bar -->
+      <div class="trust-bar">
+        <div class="trust-item">
+          <span class="trust-icon">✓</span> 纯正 AT&T / Comcast 家宽
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">✓</span> 0 欺诈风险评分 (Fraud Score: 0)
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">✓</span> WebRTC / DNS 0 泄漏保护
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">✓</span> ChatGPT / Codex 100% 极速通畅
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Inspection Demo Card -->
+  <section class="demo-section" id="demo">
+    <div class="container">
+      <div class="glass-card">
+        <div class="demo-grid">
+          <div>
+            <span class="demo-badge">LIVE INSPECTION · 真实检测</span>
+            <div class="demo-title">实机连接出口纯净度报告</div>
+            <div class="demo-desc">
+              采用真实 AT&T Residential ISP 静态住宅池。每个节点均通过 IPQualityScore 与 MaxMind 数据库双重风控认证，经由前置高速中继无感穿透，安全防关联。
+            </div>
+            <button class="btn btn-outline" onclick="refreshInspectDemo()">
+              <span>⚡</span> 点击发起实时出口检测
+            </button>
+          </div>
+
+          <div class="output-box" id="inspectOutput">
+            <div class="output-row">
+              <span class="out-label">真实公网出口 IP</span>
+              <span class="out-val green" id="outIp">12.12.110.239</span>
+            </div>
+            <div class="output-row">
+              <span class="out-label">运营商 ASN</span>
+              <span class="out-val" id="outAsn">AS7018 (AT&T Enterprises, LLC)</span>
+            </div>
+            <div class="output-row">
+              <span class="out-label">IP 属性分类</span>
+              <span class="out-val green">原生家庭静态住宅 (Residential ISP)</span>
+            </div>
+            <div class="output-row">
+              <span class="out-label">欺诈风险评分 (Fraud Score)</span>
+              <span class="out-val green">0 / 极度纯净 (通过)</span>
+            </div>
+            <div class="output-row">
+              <span class="out-label">物理归属地</span>
+              <span class="out-val">Boston, Massachusetts, US</span>
+            </div>
+            <div class="output-row">
+              <span class="out-label">DNS / WebRTC 泄漏</span>
+              <span class="out-val cyan">已完全隔离防护 (0 泄漏)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-head">
+        <h2>专为高净值出海业务打造</h2>
+        <p>告别廉价机房 IP 动辄封店、风控拦截的噩梦，全方位保障账号资产安全。</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feat-icon">🏠</div>
+          <h3>100% 独享静态住宅宽带</h3>
+          <p>对接美国顶级 ISP 电信运营商，拥有真正的本地住宅家庭用户身份。电商平台、支付网关（Stripe/PayPal）无法识别为代理。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feat-icon">⚡</div>
+          <h3>独创 AI 双轨旁路加速</h3>
+          <p>普通住宅 IP 往往被 OpenAI 封锁 403。PureISP 自研智能分流规则，AI 流量自动切入高速直连专线，彻底消除 403 阻断。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feat-icon">🛡️</div>
+          <h3>链式中继动态代理</h3>
+          <p>国内直连住宅服务器常被阻断或限速。PureISP 自动装配前置高速过墙中继，自动匹配住宅出口白名单，用户开箱即用无需配置。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feat-icon">🔒</div>
+          <h3>多店铺防关联环境</h3>
+          <p>每个 IP 拥有纯正单一静态绑定，杜绝动态漂移。配合指纹浏览器使用，是亚马逊、TikTok、eBay、Shopee 店群的黄金基础设施。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feat-icon">🚀</div>
+          <h3>小白化一键操作</h3>
+          <p>1.0.4 极简版启动后接入浏览器系统代理，退出恢复原设置。IDE 从面板启动并使用独立进程代理，不修改用户环境变量。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feat-icon">📶</div>
+          <h3>全天候极速稳定</h3>
+          <p>BGP 专线直达骨干中继，延迟低至 180ms，大文件上传、海外直播推流、高清素材传输流畅不卡顿。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dual Track Architecture Diagram -->
+  <section class="arch-section" id="dual-track">
+    <div class="container">
+      <div class="arch-card">
+        <div class="section-head" style="margin-bottom: 24px;">
+          <h2>双轨智能分流引擎（核心护城河）</h2>
+          <p>一条客户端，两组专用通道。业务与 AI 各得其所，互不干扰。</p>
+        </div>
+
+        <div class="arch-grid">
+          <div class="track-box track-resi">
+            <span class="track-badge badge-green">通道 A · 业务专轨</span>
+            <h3 style="margin-bottom: 8px;">🛒 跨境电商 & 海外业务专线</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+              路由：你的电脑 ➔ 高速中继 ➔ <strong>AT&T 原生静态住宅出口</strong>
+            </p>
+            <ul style="font-size: 13px; color: #cbd5e1; list-style: none; line-height: 1.8;">
+              <li>✓ 亚马逊/TikTok/eBay 店铺运营</li>
+              <li>✓ Stripe/PayPal 资金号登录维护</li>
+              <li>✓ 海外社媒矩阵推广 (X/FB/Instagram)</li>
+              <li>✓ 出口 IP 永远固定为纯净家宽，彻底防关联</li>
+            </ul>
+          </div>
+
+          <div class="track-box track-ai">
+            <span class="track-badge badge-cyan">通道 B · AI 极速专轨</span>
+            <h3 style="margin-bottom: 8px;">🤖 AI 极速直连专线</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+              路由：你的电脑 ➔ <strong>美国纯净直出专线 (自动故障转移)</strong>
+            </p>
+            <ul style="font-size: 13px; color: #cbd5e1; list-style: none; line-height: 1.8;">
+              <li>✓ ChatGPT 网页版瞬间秒开，杜绝 403 平台拦截</li>
+              <li>✓ VSCode Codex 扩展极速响应无感编写</li>
+              <li>✓ Claude.ai / Anthropic API / Midjourney</li>
+              <li>✓ 自动测速选择最低延迟节点，不耗费昂贵住宅流量</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-head">
+        <h2>透明定价，按需购买</h2>
+        <p>提供按月独享与灵活流量套餐，支持多种支付方式，即买即用。</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Plan 1 -->
+        <div class="price-card">
+          <div>
+            <div class="plan-name">开发者 / AI 轻享版</div>
+            <div class="plan-desc">适合出海自由职业者与日常 ChatGPT 重度开发者。</div>
+            <div class="plan-price">$15 <span>/ 月</span></div>
+            <ul class="plan-features">
+              <li><span class="check-icon">✓</span> AI 极速通道无限量高速访问</li>
+              <li><span class="check-icon">✓</span> 赠送 10GB 静态住宅体验流量</li>
+              <li><span class="check-icon">✓</span> 支持 Codex / 网页版 ChatGPT</li>
+              <li><span class="check-icon">✓</span> 专线中继低延迟</li>
+            </ul>
+          </div>
+          <button class="btn btn-outline" style="width: 100%;" onclick="openDownloadModal()">立即订购</button>
+        </div>
+
+        <!-- Plan 2 (Featured) -->
+        <div class="price-card featured">
+          <div class="featured-tag">🔥 跨境卖家最畅销</div>
+          <div>
+            <div class="plan-name">独享纯净静态住宅 (AT&T)</div>
+            <div class="plan-desc">单店铺防关联首选，100% 独享单个原生家庭宽带出口。</div>
+            <div class="plan-price">$35 <span>/ 月</span></div>
+            <ul class="plan-features">
+              <li><span class="check-icon">✓</span> <strong>独享 1 个美国家庭静态住宅 IP (AT&T)</strong></li>
+              <li><span class="check-icon">✓</span> 0 欺诈风险评分 (Fraud Score: 0)</li>
+              <li><span class="check-icon">✓</span> 包含 AI 双轨旁路极速加速通道</li>
+              <li><span class="check-icon">✓</span> 不限流量，独享 20Mbps 峰值带宽</li>
+              <li><span class="check-icon">✓</span> 专属一对一售后保障与 IP 质量保证</li>
+            </ul>
+          </div>
+          <button class="btn btn-primary" style="width: 100%;" onclick="openDownloadModal()">立即开通独享 IP</button>
+        </div>
+
+        <!-- Plan 3 -->
+        <div class="price-card">
+          <div>
+            <div class="plan-name">跨境企业集群版</div>
+            <div class="plan-desc">适合海外多品牌店群、直播出海与大型社媒矩阵。</div>
+            <div class="plan-price">$99 <span>/ 月</span></div>
+            <ul class="plan-features">
+              <li><span class="check-icon">✓</span> <strong>包含 3 个不同区域独立纯净住宅 IP</strong></li>
+              <li><span class="check-icon">✓</span> 覆盖美东 (波士顿) + 美西 (加州)</li>
+              <li><span class="check-icon">✓</span> 支持多设备并发与指纹浏览器集成</li>
+              <li><span class="check-icon">✓</span> 极速骨干专线 SLA 99.9% 连通保障</li>
+              <li><span class="check-icon">✓</span> 支持定制专属出口城市</li>
+            </ul>
+          </div>
+          <button class="btn btn-outline" style="width: 100%;" onclick="openDownloadModal()">咨询企业定制</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download Modal -->
+  <div class="modal-overlay" id="downloadModal">
+    <div class="modal-card">
+      <button class="close-btn" onclick="closeDownloadModal()">✕</button>
+      <div style="font-size: 40px; margin-bottom: 12px;">🛡️</div>
+      <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 8px;">下载 PureISP 客户端</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">
+        包含完整双轨分流引擎与原生住宅调度内核，一键安装即可使用。
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+        <a href="/download/PureISP-BS-Portable.zip" class="btn btn-primary" style="padding: 14px; font-size: 15px; background: linear-gradient(135deg, #10b981, #06b6d4); font-weight: 700;" download>
+          <span>🚀</span> 下载 B/S 极简免安装版 1.0.4 (.zip) — 双轨分流
+        </a>
+        <a href="/download/PureISP-Portable.zip" class="btn btn-outline" style="padding: 12px; font-size: 13px;" download>
+          <span>📦</span> 下载客户端完整便携版 (.zip) (100MB)
+        </a>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 14px; font-size: 12px; color: var(--text-muted); text-align: left;">
+        <strong style="color: #fff;">💡 1.0.4 极简版启动步骤：</strong><br>
+        1. 退出旧版 PureISP，保存工作并完整退出 Antigravity IDE；<br>
+        2. 解压并启动 PureISP.exe，等待代理就绪；<br>
+        3. 浏览器直接访问目标服务；IDE 请点击“启动 Antigravity IDE（独立代理）”。使用期间保持 PureISP 运行。
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-inner">
+      <div>
+        © 2026 PureISP Network Services. 保留所有权利 · 全球原生静态住宅网络提供商
+      </div>
+      <div>
+        技术架构基于独立双轨代理链技术 · 杜绝 IP 漂移与账号关联
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function openDownloadModal() {
+      document.getElementById('downloadModal').style.display = 'flex';
+    }
+    function closeDownloadModal() {
+      document.getElementById('downloadModal').style.display = 'none';
+    }
+
+    function refreshInspectDemo() {
+      const output = document.getElementById('inspectOutput');
+      output.style.opacity = '0.5';
+      fetch('/api/v1/ip/inspect')
+        .then(r => r.json())
+        .then(res => {
+          output.style.opacity = '1';
+          if (res.data) {
+            document.getElementById('outIp').innerText = res.data.ip;
+            document.getElementById('outAsn').innerText = res.data.asn + ' (' + res.data.carrier + ')';
+          }
+        })
+        .catch(() => {
+          output.style.opacity = '1';
+        });
+    }
+
+    // Close modal on escape
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeDownloadModal();
+    });
+  </script>
+</body>
+</html>

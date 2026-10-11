@@ -1,0 +1,27 @@
+# ========================================================
+# PureISP 商业级双轨智能分流规则模板 (PureISP Dual-Track Rules)
+# ========================================================
+
+prepend:
+  # 1. 纯净住宅专线保护（Gemini / Claude 等高权重业务严走中继+静态住宅 IP）
+  - DOMAIN-SUFFIX,claude.ai,Oxylabs运营专用
+  - DOMAIN-SUFFIX,anthropic.com,Oxylabs运营专用
+  - DOMAIN-KEYWORD,anthropic,Oxylabs运营专用
+  - DOMAIN-SUFFIX,gemini.google.com,Oxylabs运营专用
+
+  # 2. OpenAI / ChatGPT 智能旁路（仅限 ChatGPT 绕过住宅代理直连高速 VPS 规避 403）
+  - DOMAIN-SUFFIX,chatgpt.com,🤖 AI 专用通道
+  - DOMAIN-SUFFIX,oaistatic.com,🤖 AI 专用通道
+  - DOMAIN-SUFFIX,oaiusercontent.com,🤖 AI 专用通道
+  - DOMAIN-SUFFIX,openai.com,🤖 AI 专用通道
+
+append:
+  # 3. 国内流量绝对直连（0 延迟损耗，0 代理流量浪费）
+  - GEOIP,cn,DIRECT
+  - DOMAIN-SUFFIX,cn,DIRECT
+  - DOMAIN-KEYWORD,-cn,DIRECT
+
+  # 4. 全局兜底走原生静态住宅 IP
+  - MATCH,Oxylabs运营专用
+
+delete: []

@@ -1,0 +1,10 @@
+node_modules/
+commercial/.env
+commercial/data/
+dist/
+*.zip
+*.enc
+**/config.yaml
+**/账号信息.txt
+dist/PureISP-License*-Local/
+*.user

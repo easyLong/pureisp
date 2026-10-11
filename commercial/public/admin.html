@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PureISP 卡密管理</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,"Microsoft YaHei",sans-serif;color:#e6edf5;background:#0e141d}*{box-sizing:border-box}body{font-size:14px;max-width:1500px;margin:28px auto;padding:0 24px}header{display:flex;align-items:center;justify-content:space-between;gap:16px}h1{font-size:25px;letter-spacing:.5px;margin:0 0 6px}header p{margin:0;color:#93a3b6}.timezone{font-size:12px;color:#9fb1c6;border:1px solid #293748;border-radius:6px;padding:6px 10px;white-space:nowrap}input,select,button{font:inherit;border:1px solid #344254;border-radius:6px;padding:8px 10px;background:#172231;color:inherit;outline:none}input:focus,select:focus{border-color:#58a6ff;box-shadow:0 0 0 2px #58a6ff20}button{cursor:pointer;white-space:nowrap}button:hover{background:#233247;border-color:#516880}button:disabled{opacity:.4;cursor:default}.primary{background:#246bbd;border-color:#347cd1}.primary:hover{background:#307fd8}.danger{color:#ffacaa}#connect{max-width:580px;margin-top:28px;padding:20px;background:#141e2b;border:1px solid #293748;border-radius:10px}#connect input{width:350px;max-width:75%}#connect small{display:block;color:#93a3b6;line-height:1.6;margin-top:12px}#notice{min-height:24px;color:#7cdccc;margin:14px 0}#mint{display:flex;align-items:end;gap:14px;flex-wrap:wrap;margin:0 0 22px;padding:16px 18px;background:#141e2b;border:1px solid #293748;border-radius:10px}#mint strong{align-self:center;margin-right:8px}label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#9fb1c6}label input{font-size:14px;color:#e6edf5}#label{width:210px}#expiry{width:270px}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}#search{width:340px;max-width:100%}#statusFilter{min-width:140px}#resultCount{color:#93a3b6;font-size:13px}.toolbar .spacer{flex:1}.table-wrap{overflow:auto;border:1px solid #293748;border-radius:10px}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #253244}th{background:#182332;font-size:12px;font-weight:500;color:#9fb1c6}td{height:54px}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:#141f2d}.account-heading{display:flex;align-items:center;gap:10px}.account-label{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis}.copy-button{padding:5px 8px;font-size:12px}.card-key{width:350px;font:12px ui-monospace,Consolas,monospace;border-color:transparent;background:transparent;padding:6px 0}.card-key:focus{box-shadow:none;border-color:#344254}.missing-key{color:#8494a8}.expiry-input{width:268px;padding:6px 8px;font-size:12px}.actions{display:flex;align-items:center;gap:6px}.actions button{padding:6px 9px;font-size:12px}.status{display:inline-block;padding:4px 8px;border-radius:5px;font-size:12px;background:#263143;color:#b5c1d0}.status.active{background:#17382f;color:#76dcb2}.status.expired{background:#3b2c1d;color:#e7b37b}.status.disabled{background:#3e2529;color:#ef969e}#empty{padding:26px;text-align:center;color:#93a3b6;margin:0}@media(max-width:700px){body{padding:0 12px;margin:20px auto}header{align-items:start}.timezone{font-size:11px}#mint{gap:12px}#mint strong{width:100%}#search{width:100%}.toolbar .spacer{display:none}}
+</style>
+<header><div><h1>PureISP 卡密管理</h1><p>查找用户、复制卡密与续费</p></div><span class="timezone">北京时间 UTC+8</span></header>
+<form id="connect"><input id="key" type="password" autocomplete="off" placeholder="粘贴 ADMIN_KEY 的值" aria-label="管理员密钥" required><button id="login" class="primary">进入管理</button><small>使用服务端 .env 中的 ADMIN_KEY 登录；客户端卡密不能登录后台。</small></form>
+<p id="notice" role="status"></p>
+<section id="management" hidden>
+<form id="mint"><strong>生成卡密</strong><label>账号备注<input id="label" maxlength="80" placeholder="留空自动生成用户名"></label><label>有效期（北京时间）<input id="expiry" type="datetime-local" step="0.001" required></label><button id="generate" class="primary">生成卡密</button></form>
+<div class="toolbar"><input id="search" type="search" autocomplete="off" placeholder="搜索账号、完整卡密、尾号或卡密 ID" aria-label="搜索卡密"><select id="statusFilter" aria-label="筛选卡密状态"><option value="all">全部状态</option><option value="active">有效</option><option value="expiring">7 天内到期</option><option value="expired">已到期</option><option value="disabled">已停用</option><option value="pending">待开通</option></select><button id="clearSearch">清除筛选</button><span id="resultCount" role="status"></span><span class="spacer"></span><button id="refresh">刷新</button><button id="exit">退出管理</button></div>
+<div class="table-wrap"><table><thead><tr><th>账号</th><th>完整卡密</th><th>状态</th><th>有效期（北京时间）</th><th>续费 / 操作</th></tr></thead><tbody id="cards"></tbody></table><p id="empty" hidden>没有匹配的卡密，请调整搜索或筛选条件。</p></div>
+</section>
+<script>
+let key='',session=0,cardList=[],listRequest=0;const el=id=>document.getElementById(id),notice=text=>el('notice').textContent=text;
+const states={pending:'待开通',active:'有效',expired:'已到期',disabled:'已停用'};
+async function api(path,method='GET',body){const generation=session;let response;try{response=await fetch(path,{method,headers:{'X-Admin-Key':key,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,redirect:'error',signal:AbortSignal.timeout(10000)});}catch{throw Error('无法连接授权服务，请确认服务已启动，并通过 /admin 地址访问页面。');}if(response.status===401)throw Error('管理员密钥不正确，请复制服务端 .env 中 ADMIN_KEY 的值；客户端卡密不能登录后台。');let data;try{data=await response.json();}catch{throw Error('服务响应异常，请检查访问地址。');}if(generation!==session||!key)throw Error('管理会话已退出，请重新登录。');if(!response.ok)throw Error(data.message||'操作失败');return data;}
+function adminKey(value){value=value.trim().replace(/^ADMIN_KEY\s*=\s*/i,'');if((value.startsWith('"')&&value.endsWith('"'))||(value.startsWith("'")&&value.endsWith("'")))value=value.slice(1,-1);if(/^PUREISP-/i.test(value))throw Error('这是客户端卡密，请改用服务端 .env 中的 ADMIN_KEY 登录后台。');if(!/^[a-f0-9]{64,512}$/i.test(value))throw Error('请输入 ADMIN_KEY 的完整值，可以直接粘贴 .env 中的 ADMIN_KEY=整行。');return value;}
+function beijingInput(date){return new Date(date.getTime()+8*3600000).toISOString().slice(0,23);}
+function beijingDate(value){return new Date(value+'+08:00');}
+function filteredCards(){
+  const terms=el('search').value.trim().toLowerCase().split(/\s+/).filter(Boolean),status=el('statusFilter').value||'all';
+  return cardList.filter(card=>{
+    const text=[card.label,card.licenseKey,card.hint,card.id].filter(Boolean).join(' ').toLowerCase();
+    if(!terms.every(term=>text.includes(term)))return false;
+    if(status==='expiring'){const remaining=Date.parse(card.expiresAt)-Date.now();return card.status==='active'&&remaining>0&&remaining<=7*86400000;}
+    return status==='all'||card.status===status;
+  }).sort((a,b)=>Number(a.status==='disabled')-Number(b.status==='disabled')||Date.parse(b.createdAt||0)-Date.parse(a.createdAt||0));
+}
+function render(){
+  const cards=filteredCards();el('cards').replaceChildren();
+  el('resultCount').textContent='显示 '+cards.length+' / 共 '+cardList.length+' 条';el('empty').hidden=cards.length>0;
+  for(const card of cards){
+    const row=document.createElement('tr'),name=document.createElement('td');
+    const heading=document.createElement('div'),label=document.createElement('span'),copy=document.createElement('button');
+    heading.className='account-heading';label.className='account-label';label.textContent=card.label||'无备注';label.title=(card.label||'无备注')+' · 卡密 ID：'+card.id;
+    copy.className='copy-button';copy.textContent='复制卡密';
+    const hasKey=typeof card.licenseKey==='string'&&card.licenseKey.length>0;
+    copy.disabled=!hasKey;heading.append(label);name.append(heading);row.append(name);
+    const keyCell=document.createElement('td'),keyInput=document.createElement('input');keyInput.className='card-key';keyInput.readOnly=true;keyInput.ariaLabel=(card.label||card.hint)+' 的完整卡密';
+    keyInput.value=hasKey?card.licenseKey:(card.keyError||'旧卡无完整记录（'+card.hint+'）');keyInput.title=keyInput.value;
+    if(!hasKey)keyInput.className+=' missing-key';
+    keyCell.append(keyInput);row.append(keyCell);
+    copy.onclick=async()=>{try{await navigator.clipboard.writeText(keyInput.value);notice('已复制 '+(card.label||card.hint)+' 的卡密。');}catch{keyInput.select();notice('请按 Ctrl+C 复制卡密。');}};
+    const state=document.createElement('td'),badge=document.createElement('span');badge.className='status '+card.status;badge.textContent=states[card.status]||card.status;state.append(badge);row.append(state);
+    const dateCell=document.createElement('td'),input=document.createElement('input');input.className='expiry-input';input.type='datetime-local';input.step='0.001';input.value=card.expiresAt?beijingInput(new Date(card.expiresAt)):'';dateCell.append(input);row.append(dateCell);
+    const actions=document.createElement('td'),buttons=document.createElement('div');buttons.className='actions';buttons.append(copy);
+    for(const [title,enabled,days] of [['设置 / 恢复',true,0],['续费30天',true,30],['停用',false,0]]){
+      const button=document.createElement('button');button.textContent=title;if(!enabled)button.className='danger';
+      button.onclick=async()=>{button.disabled=true;try{const date=days?new Date(Math.max(Date.now(),Date.parse(card.expiresAt)||0)+days*86400000):(enabled?beijingDate(input.value):new Date(card.expiresAt));if(!Number.isFinite(date.getTime()))throw Error('请选择有效日期');await api('/v1/admin/cards/'+card.id+'/license','PUT',{enabled,expiresAt:date.toISOString()});await load();notice('已保存 '+(card.label||card.hint)+' 的有效期。用户点击启动即可同步。');}catch(e){notice(e.message);}finally{button.disabled=false;}};
+      buttons.append(button);
+    }
+    actions.append(buttons);row.append(actions);el('cards').append(row);
+  }
+}
+async function load(){
+  const request=++listRequest;const {cards}=await api('/v1/admin/cards?includeKeys=true');
+  if(request!==listRequest)return;
+  cardList=cards;render();el('management').hidden=false;el('connect').hidden=true;
+}
+el('expiry').value=beijingInput(new Date(Date.now()+30*86400000));
+el('connect').onsubmit=async event=>{event.preventDefault();el('login').disabled=true;try{session++;key=adminKey(el('key').value);el('key').value='';notice('正在验证管理员密钥…');await load();notice('已进入管理。');}catch(e){key='';notice(e.message);}finally{el('login').disabled=false;}};
+el('mint').onsubmit=async event=>{event.preventDefault();el('generate').disabled=true;try{const date=beijingDate(el('expiry').value);if(!Number.isFinite(date.getTime()))throw Error('请选择有效日期');await api('/v1/admin/cards','POST',{label:el('label').value.trim(),expiresAt:date.toISOString()});el('search').value='';el('statusFilter').value='all';await load();notice('卡密已生成，请点击“续费 / 操作”栏中的“复制卡密”交付用户。');}catch(e){notice(e.message);}finally{el('generate').disabled=false;}};
+el('search').oninput=render;el('statusFilter').onchange=render;
+el('clearSearch').onclick=()=>{el('search').value='';el('statusFilter').value='all';render();};
+el('refresh').onclick=()=>load().catch(e=>notice(e.message));
+el('exit').onclick=()=>{session++;listRequest++;key='';cardList=[];el('search').value='';el('statusFilter').value='all';render();el('management').hidden=true;el('connect').hidden=false;notice('已退出管理。');};
+</script></html>

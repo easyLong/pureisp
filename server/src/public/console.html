@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PureISP — 纯净静态住宅 Web 控制台 (B/S 架构)</title>
+  <style>
+    :root {
+      --bg-dark: #080c14;
+      --card-bg: rgba(17, 24, 39, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover: rgba(30, 41, 59, 0.85);
+      --primary: #10b981;
+      --primary-glow: rgba(16, 185, 129, 0.35);
+      --primary-hover: #059669;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.25);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-sub: #64748b;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(59, 130, 246, 0.10) 0%, transparent 45%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Top Navigation */
+    header {
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      background: rgba(8, 12, 20, 0.8);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #10b981, #047857);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: #fff;
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    .brand-title {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      transition: all 0.3s;
+    }
+
+    .status-badge.disconnected {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    .status-badge.disconnected .status-dot {
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .license-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--card-border);
+      font-size: 13px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1140px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* Glass Card */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      backdrop-filter: blur(16px);
+      padding: 24px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Master Switch Card */
+    .hero-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 28px 24px;
+      background: linear-gradient(180deg, rgba(17, 24, 39, 0.85) 0%, rgba(15, 23, 42, 0.6) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+    }
+
+    .hero-card.disconnected {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .status-pulse-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 999px;
+      color: #34d399;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      margin-bottom: 14px;
+    }
+
+    .power-title {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .power-desc {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-bottom: 24px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 860px;
+      margin-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 24px;
+    }
+
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-val {
+      font-size: 15px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    /* IP & Identity Section */
+    .ip-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 24px;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.7) 100%);
+    }
+
+    .ip-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ip-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ip-address {
+      font-size: 32px;
+      font-weight: 800;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: -0.5px;
+      color: #38bdf8;
+    }
+
+    .copy-btn {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(56, 189, 248, 0.25);
+    }
+
+    .ip-tags {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .ip-tag {
+      font-size: 13px;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .ip-tag.highlight {
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.25);
+      font-weight: 600;
+    }
+
+    .ip-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 8px 16px;
+      border-radius: 10px;
+      color: #34d399;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* AI Dual Track Grid */
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .track-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .track-card {
+      background: rgba(17, 24, 39, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+
+    .track-card:hover {
+      background: var(--card-hover);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .track-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .track-service {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .route-pill {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    .route-pill.res {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .route-pill.bypass {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .route-pill.direct {
+      background: rgba(148, 163, 184, 0.15);
+      color: #cbd5e1;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .track-details {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .ping-display {
+      font-family: monospace;
+      font-weight: 600;
+      color: #38bdf8;
+    }
+
+    /* Notice Box */
+    .notice-card {
+      background: rgba(30, 58, 138, 0.18);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .notice-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .notice-text {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #bfdbfe;
+    }
+
+    .notice-text strong {
+      color: #fff;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      max-width: 460px;
+      width: 100%;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      font-family: monospace;
+    }
+
+    .input-field:focus {
+      border-color: #10b981;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      font-weight: 600;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+    }
+
+    .presets-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+
+    .preset-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(16, 185, 129, 0.95);
+      color: #fff;
+      font-weight: 600;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 300;
+    }
+
+    @media (max-width: 768px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+      .track-grid {
+        grid-template-columns: 1fr;
+      }
+      .ip-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .ip-right {
+        align-items: flex-start;
+      }
+    }
+  
+    /* Transit Proxy Switcher Section */
+    .transit-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(17, 24, 39, 0.9) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      margin-top: 24px;
+    }
+
+    .transit-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .transit-title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .transit-icon {
+      font-size: 24px;
+    }
+
+    .transit-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .active-node-badge {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 14px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .transit-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    .transit-subtitle strong {
+      color: #38bdf8;
+    }
+
+    .btn-primary-sm {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+      transition: all 0.2s;
+    }
+
+    .btn-primary-sm:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-1px);
+    }
+
+    .refresh-icon.spinning {
+      display: inline-block;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Controls: Country Tabs + Search */
+    .transit-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 16px;
+    }
+
+    .country-tabs {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: #fff;
+    }
+
+    .tab-btn.active {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.45);
+      color: #34d399;
+    }
+
+    .tab-count {
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-weight: normal;
+    }
+
+    .tab-btn.active .tab-count {
+      background: rgba(16, 185, 129, 0.25);
+      color: #a7f3d0;
+    }
+
+    .search-box-wrap {
+      flex: 1;
+      min-width: 200px;
+      max-width: 280px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 14px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: #10b981;
+      background: rgba(30, 41, 59, 0.9);
+    }
+
+    /* Node Grid & Node Card */
+    .node-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .node-grid::-webkit-scrollbar {
+      width: 6px;
+    }
+    .node-grid::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+
+    .node-card {
+      background: rgba(24, 32, 47, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .node-card:hover {
+      background: rgba(30, 41, 59, 0.85);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .node-card.active {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.08) 100%);
+      border-color: rgba(16, 185, 129, 0.55);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.15);
+    }
+
+    .node-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .node-name-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .node-card.active .node-name-wrap {
+      color: #34d399;
+    }
+
+    .radio-circle {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .node-card.active .radio-circle {
+      border-color: #10b981;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .node-bottom-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .node-proto-tag {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .node-delay-badge {
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 12.5px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .delay-fast {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+    }
+    .delay-medium {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+    }
+    .delay-slow {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+    }
+    .delay-timeout {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+    .delay-untested {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-sub);
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand-wrap">
+      <div class="brand-logo">⚡</div>
+      <div class="brand-title">
+        PureISP
+        <span class="status-badge" id="navBadge">
+          <span class="status-dot"></span>
+          <span id="navBadgeText">已连接 · 纯净家宽保护中</span>
+        </span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="license-chip">
+        <span style="color: var(--text-sub);">授权卡密:</span>
+        <strong id="headerLicense">PUREISP-VIP-ATT-2026</strong>
+      </div>
+      <button class="btn-ghost" onclick="openLicenseModal()">切换卡密</button>
+      <a href="/" class="btn-ghost" style="text-decoration: none;">官网首页</a>
+    </div>
+  </header>
+
+  <!-- Main Dashboard -->
+  <main>
+
+    <!-- Master Switch Hero Card -->
+    <div class="card hero-card" id="heroCard">
+      <div class="status-pulse-badge">
+        <span class="status-dot"></span>
+        <span>AT&T 原生静态住宅专线 · 保护运行中</span>
+      </div>
+      <h1 class="power-title" id="powerStatusTitle">AT&T 原生静态住宅加速已开启</h1>
+      <p class="power-desc" id="powerStatusDesc">二段跳链式专线运行中 · Claude / Gemini / ChatGPT 全线智能智能分流</p>
+
+      <div class="metrics-grid">
+        <div class="metric-item">
+          <span class="metric-label">保护接管模式</span>
+          <span class="metric-val" style="color: #34d399;">系统代理 (127.0.0.1:7890)</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">平均链路延迟</span>
+          <span class="metric-val" id="metricAvgPing">142 ms</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">已连续保护</span>
+          <span class="metric-val" id="metricUptime">02:45:18</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">剩余独享流量</span>
+          <span class="metric-val" id="metricTraffic">9999 GB (无限量)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-Time IP & Identity Card -->
+    <div class="card ip-card">
+      <div class="ip-left">
+        <div class="ip-title-row">
+          <span style="color: var(--text-sub); font-size: 13px; font-weight: 600; text-transform: uppercase;">当前出口公网 IP</span>
+          <button class="copy-btn" onclick="copyIp()">一键复制 IP</button>
+        </div>
+        <div class="ip-address" id="displayIp">12.12.110.239</div>
+        <div class="ip-tags">
+          <span class="ip-tag highlight">🇺🇸 美国 · 波士顿 (Boston, MA)</span>
+          <span class="ip-tag">🏢 运营商: <strong id="displayCarrier">AT&T Enterprises, LLC</strong></span>
+          <span class="ip-tag">ASN: <strong id="displayAsn">AS7018</strong></span>
+          <span class="ip-tag highlight">🏡 100% 静态住宅家宽 (ISP)</span>
+        </div>
+      </div>
+      <div class="ip-right">
+        <div class="security-badge">
+          <span>🛡️ 欺诈分: 0 (Scamalytics 极度安全)</span>
+        </div>
+        <div style="font-size: 12.5px; color: var(--text-muted);">
+          WebRTC 泄露: <strong style="color: #34d399;">无</strong> · DNS 加密: <strong style="color: #34d399;">保护中</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Dual-Track Status Visualizer -->
+    <div>
+      <div class="section-title">
+        <span>AI 智能双轨分流矩阵</span>
+        <button class="btn-ghost" style="padding: 4px 12px; font-size: 12.5px;" onclick="testPing()">
+          <span id="pingBtnText">⚡ 实时链路测速</span>
+        </button>
+      </div>
+
+      <div class="track-grid">
+        <!-- Claude Card -->
+        <div class="track-card">
+          <div class="track-header">
+            <span class="track-service">
+              <span style="color: #d97706;">✦</span> Anthropic Claude
+            </span>
+            <span class="route-pill res">纯净住宅专线</span>
+          </div>
+          <div class="track-details">
+            <span>出口: <strong style="color: #f1f5f9;">AT&T (12.12.110.239)</strong></span>
+            <span class="ping-display" id="pingClaude">145 ms</span>
+          </div>
+          <div style="font-size: 12px; color: #34d399;">● 100% 家宽信用评级，防封号与异常封控</div>
+        </div>
+
+        <!-- Gemini Card -->
+        <div class="track-card">
+          <div class="track-header">
+            <span class="track-service">
+              <span style="color: #3b82f6;">❖</span> Google Gemini
+            </span>
+            <span class="route-pill res">纯净住宅专线</span>
+          </div>
+          <div class="track-details">
+            <span>出口: <strong style="color: #f1f5f9;">AT&T (12.12.110.239)</strong></span>
+            <span class="ping-display" id="pingGemini">138 ms</span>
+          </div>
+          <div style="font-size: 12px; color: #34d399;">● 规避地域限制，保障账号权重纯净度</div>
+        </div>
+
+        <!-- ChatGPT Card -->
+        <div class="track-card">
+          <div class="track-header">
+            <span class="track-service">
+              <span style="color: #10b981;">❇</span> OpenAI ChatGPT
+            </span>
+            <span class="route-pill bypass">高速中继直连</span>
+          </div>
+          <div class="track-details">
+            <span>出口: <strong style="color: #f1f5f9;">美国美西优化 VPS</strong></span>
+            <span class="ping-display" id="pingChatgpt">68 ms</span>
+          </div>
+          <div style="font-size: 12px; color: #60a5fa;">● 自动绕过 Oxylabs 403 阻断，极速秒开</div>
+        </div>
+
+        <!-- Domestic Card -->
+        <div class="track-card">
+          <div class="track-header">
+            <span class="track-service">
+              <span style="color: #94a3b8;">◉</span> 微信 / 飞书 / B站
+            </span>
+            <span class="route-pill direct">本地物理网卡</span>
+          </div>
+          <div class="track-details">
+            <span>出口: <strong style="color: #f1f5f9;">本地宽带直连</strong></span>
+            <span class="ping-display" style="color: #94a3b8;">5 ms</span>
+          </div>
+          <div style="font-size: 12px; color: #94a3b8;">● 物理网卡直连，0 延迟且不耗代理流量</div>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- Transit Proxy Switcher Section -->
+    <div class="card transit-section" id="transitSection">
+      <div class="transit-header">
+        <div>
+          <div class="transit-title-row">
+            <span class="transit-icon">🛡️</span>
+            <h2 class="transit-title">住宅底层前置中继调度</h2>
+            <span class="active-node-badge" id="activeNodeBadge">当前中继: ♻️ 自动优选 (最低延迟)</span>
+          </div>
+          <p class="transit-subtitle">
+            基于二段跳链式专线技术：前置中继负责高速跨海传输，<strong>最终公网出口 100% 始终锁定波士顿 AT&T 静态住宅 IP (12.12.110.239)</strong>
+          </p>
+        </div>
+        <div class="transit-actions">
+          <button class="btn-primary-sm" id="btnTestAllDelays" onclick="testAllDelays()">
+            <span class="refresh-icon" id="testDelaysIcon">⚡</span>
+            <span id="testDelaysText">⚡ 测速当前分组并按延迟排序</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Country Filters & Search -->
+      <div class="transit-controls">
+        <div class="country-tabs" id="countryTabs">
+          <button class="tab-btn active" data-country="ALL" onclick="filterCountry('ALL')">
+            🌐 全部节点 <span class="tab-count" id="countALL">0</span>
+          </button>
+          <button class="tab-btn" data-country="US" onclick="filterCountry('US')">
+            🇺🇸 美国专线 <span class="tab-count" id="countUS">0</span>
+          </button>
+          <button class="tab-btn" data-country="JP" onclick="filterCountry('JP')">
+            🇯🇵 日本高速 <span class="tab-count" id="countJP">0</span>
+          </button>
+          <button class="tab-btn" data-country="HK" onclick="filterCountry('HK')">
+            🇭🇰 香港低延 <span class="tab-count" id="countHK">0</span>
+          </button>
+          <button class="tab-btn" data-country="SG" onclick="filterCountry('SG')">
+            🇸🇬 新加坡 <span class="tab-count" id="countSG">0</span>
+          </button>
+          <button class="tab-btn" data-country="OTHER" onclick="filterCountry('OTHER')">
+            🌏 其它中继 <span class="tab-count" id="countOTHER">0</span>
+          </button>
+        </div>
+
+        <div class="search-box-wrap">
+          <input type="text" class="search-input" id="nodeSearchInput" placeholder="🔍 搜索节点名称..." oninput="onSearchInput()">
+        </div>
+      </div>
+
+      <!-- Node Cards Grid -->
+      <div class="node-grid" id="nodeGrid">
+        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 30px;">
+          正在加载前置中继节点列表...
+        </div>
+      </div>
+    </div>
+
+    <!-- System Proxy & Local Direct Helper -->
+    <div class="notice-card">
+      <div class="notice-icon">💡</div>
+      <div class="notice-text">
+        <strong>系统代理与双轨分流说明</strong><br>
+        PureISP 启动后启用本地系统代理（127.0.0.1:7890），停止时恢复原设置：<br>
+        • <strong>浏览器</strong>：使用系统代理即可接入；进入 PureISP 的国内流量按直连规则处理；<br>
+        • <strong>海外 AI 服务（Gemini/Claude）</strong>：进入 PureISP 的流量按住宅出口规则处理；<br>
+        • <strong>终端开发工具（Git/CodeX）</strong>：从已配置代理的 IDE 中启动，或在当前终端按需指定 <code>HTTP_PROXY=http://127.0.0.1:7890</code>；使用期间保持 PureISP 运行。
+      </div>
+    </div>
+
+  </main>
+
+  <!-- License Switcher Modal -->
+  <div class="modal-backdrop" id="licenseModal">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="modal-title">切换 PureISP 授权卡密</h3>
+        <button class="btn-ghost" onclick="closeLicenseModal()">✕</button>
+      </div>
+      <p style="font-size: 13.5px; color: var(--text-muted);">
+        输入您的 VIP 授权码激活或切换不同地区的独享住宅 IP 节点：
+      </p>
+
+      <input type="text" class="input-field" id="modalKeyInput" placeholder="请输入卡密 (如 PUREISP-VIP-ATT-2026)">
+
+      <div class="presets-row">
+        <span style="font-size: 12px; color: var(--text-sub);">快捷预置节点演示卡密：</span>
+        <button class="preset-btn" onclick="selectPreset('PUREISP-VIP-ATT-2026')">
+          <span>🇺🇸 波士顿 AT&T 独享静态住宅</span>
+          <code>PUREISP-VIP-ATT-2026</code>
+        </button>
+        <button class="preset-btn" onclick="selectPreset('PUREISP-PRO-US-WEST')">
+          <span>🇺🇸 加州圣何塞 Comcast 独享住宅</span>
+          <code>PUREISP-PRO-US-WEST</code>
+        </button>
+      </div>
+
+      <button class="btn-primary" onclick="submitLicenseSwitch()">立即激活并切换出口</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toastMsg">已复制到剪贴板</div>
+
+  <script>
+    let isConnected = true;
+    let connectStartTime = Date.now() - (2 * 3600 + 45 * 60) * 1000;
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/v1/proxy/status');
+        const json = await res.json();
+        if (json.code === 0) {
+          renderState(json.data);
+        }
+      } catch (e) {
+        console.error('Fetch status error:', e);
+      }
+    }
+
+    function renderState(data) {
+      isConnected = data.connected;
+      const toggleBtn = document.getElementById('masterToggleBtn');
+      const heroCard = document.getElementById('heroCard');
+      const title = document.getElementById('powerStatusTitle');
+      const desc = document.getElementById('powerStatusDesc');
+      const navBadge = document.getElementById('navBadge');
+      const navBadgeText = document.getElementById('navBadgeText');
+
+      if (isConnected) {
+        if (toggleBtn) toggleBtn.classList.remove('off');
+        heroCard.classList.remove('disconnected');
+        navBadge.classList.remove('disconnected');
+        title.innerText = 'AT&T 原生静态住宅加速已开启';
+        desc.innerText = '二段跳链式专线运行中 · Claude / Gemini / ChatGPT 全线智能分流';
+        navBadgeText.innerText = '已连接 · 纯净家宽保护中';
+      } else {
+        if (toggleBtn) toggleBtn.classList.add('off');
+        heroCard.classList.add('disconnected');
+        navBadge.classList.add('disconnected');
+        title.innerText = 'PureISP 纯净住宅保护已暂停';
+        desc.innerText = '当前处于本地直连模式，海外流量暂未受家宽保护';
+        navBadgeText.innerText = '已断开 · 未受保护';
+      }
+
+      if (data.activeLicense) {
+        document.getElementById('headerLicense').innerText = data.activeLicense.licenseKey;
+        document.getElementById('displayIp').innerText = data.activeLicense.egressIp;
+        document.getElementById('displayCarrier').innerText = data.activeLicense.carrier;
+        document.getElementById('displayAsn').innerText = data.activeLicense.asn;
+      }
+
+      if (data.latency) {
+        document.getElementById('pingClaude').innerText = data.latency.claude + ' ms';
+        document.getElementById('pingGemini').innerText = data.latency.gemini + ' ms';
+        document.getElementById('pingChatgpt').innerText = data.latency.chatgpt + ' ms';
+        document.getElementById('metricAvgPing').innerText = Math.round((data.latency.claude + data.latency.gemini) / 2) + ' ms';
+      }
+    }
+
+    async function toggleProxy() {
+      try {
+        const res = await fetch('/api/v1/proxy/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ connected: !isConnected })
+        });
+        const json = await res.json();
+        showToast(json.message);
+        fetchStatus();
+      } catch (e) {
+        showToast('切换连接失败: ' + e.message);
+      }
+    }
+
+    async function testPing() {
+      const btnText = document.getElementById('pingBtnText');
+      btnText.innerText = '测速中...';
+      try {
+        const res = await fetch('/api/v1/proxy/ping', { method: 'POST' });
+        const json = await res.json();
+        if (json.code === 0) {
+          document.getElementById('pingClaude').innerText = json.data.claude + ' ms';
+          document.getElementById('pingGemini').innerText = json.data.gemini + ' ms';
+          document.getElementById('pingChatgpt').innerText = json.data.chatgpt + ' ms';
+          document.getElementById('metricAvgPing').innerText = Math.round((json.data.claude + json.data.gemini) / 2) + ' ms';
+          showToast('链路延迟测速完成！');
+        }
+      } catch (e) {
+        showToast('测速失败');
+      } finally {
+        btnText.innerText = '⚡ 实时链路测速';
+      }
+    }
+
+    function openLicenseModal() {
+      document.getElementById('licenseModal').classList.add('active');
+    }
+
+    function closeLicenseModal() {
+      document.getElementById('licenseModal').classList.remove('active');
+    }
+
+    function selectPreset(key) {
+      document.getElementById('modalKeyInput').value = key;
+    }
+
+    async function submitLicenseSwitch() {
+      const key = document.getElementById('modalKeyInput').value.trim();
+      if (!key) return showToast('请输入有效的卡密');
+      try {
+        const res = await fetch('/api/v1/license/switch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ licenseKey: key })
+        });
+        const json = await res.json();
+        if (json.code === 0) {
+          showToast(json.message);
+          closeLicenseModal();
+          fetchStatus();
+        } else {
+          showToast(json.message || '切换失败');
+        }
+      } catch (e) {
+        showToast('网络请求失败');
+      }
+    }
+
+    function copyIp() {
+      const ip = document.getElementById('displayIp').innerText;
+      navigator.clipboard.writeText(ip);
+      showToast('已复制出口 IP: ' + ip);
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toastMsg');
+      toast.innerText = text;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 2500);
+    }
+
+    // Live Uptime Timer
+    setInterval(() => {
+      if (!isConnected) {
+        document.getElementById('metricUptime').innerText = '00:00:00 (暂停)';
+        return;
+      }
+      const elapsed = Math.floor((Date.now() - connectStartTime) / 1000);
+      const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+      const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+      const s = String(elapsed % 60).padStart(2, '0');
+      document.getElementById('metricUptime').innerText = `${h}:${m}:${s}`;
+    }, 1000);
+
+    // Initial load
+    fetchStatus();
+  
+    // ==========================================
+    // Transit Proxy Switcher Engine (Native Mihomo REST API)
+    // ==========================================
+    let transitNodes = [];
+    let currentActiveTransit = '♻️ 自动优选 (最低延迟)';
+    let currentCountryFilter = 'ALL';
+    let currentSearchTerm = '';
+    let isTestingDelays = false;
+
+    const countryLabels = {
+      ALL: '全部节点',
+      US: '美国专线',
+      JP: '日本高速',
+      HK: '香港低延',
+      SG: '新加坡',
+      OTHER: '其它中继'
+    };
+
+    // Detect country by name
+    function getNodeCountry(name) {
+      if (/自动|auto|优选/i.test(name)) return 'AUTO';
+      if (/美|US|United States|波士顿|西美/i.test(name)) return 'US';
+      if (/日|东京|JP|Japan/i.test(name)) return 'JP';
+      if (/香|港|HK|Hong Kong/i.test(name)) return 'HK';
+      if (/新|狮城|SG|Singapore/i.test(name)) return 'SG';
+      return 'OTHER';
+    }
+
+    async function loadTransitNodes() {
+      try {
+        const res = await fetch('/proxies');
+        if (!res.ok) throw new Error('Failed to load /proxies');
+        const data = await res.json();
+        const proxies = data.proxies || {};
+        
+        const group = proxies['🛡️ 住宅前置中继'] || proxies['♻️ 自动优选 (最低延迟)'];
+        if (!group) return;
+
+        currentActiveTransit = group.now || '♻️ 自动优选 (最低延迟)';
+        document.getElementById('activeNodeBadge').innerText = '当前中继: ' + currentActiveTransit;
+
+        const allNames = group.all || [];
+        transitNodes = allNames.map(name => {
+          const info = proxies[name] || {};
+          let delay = 9998;
+          let status = 'untested';
+
+          if (info.history && info.history.length > 0) {
+            const last = info.history[info.history.length - 1];
+            if (last.delay && last.delay > 0) {
+              delay = last.delay;
+              status = 'ok';
+            } else if (last.delay === 0) {
+              delay = 9999;
+              status = 'timeout';
+            }
+          }
+
+          return {
+            name: name,
+            type: info.type || 'Proxy',
+            country: getNodeCountry(name),
+            delay: delay,
+            status: status
+          };
+        });
+
+        updateTabCounts();
+        updateTestBtnLabel();
+        renderNodeGrid();
+      } catch (err) {
+        console.warn('Load transit nodes warning:', err);
+      }
+    }
+
+    function updateTabCounts() {
+      const counts = { ALL: transitNodes.length, US: 0, JP: 0, HK: 0, SG: 0, OTHER: 0 };
+      transitNodes.forEach(n => {
+        if (n.country === 'US') counts.US++;
+        else if (n.country === 'JP') counts.JP++;
+        else if (n.country === 'HK') counts.HK++;
+        else if (n.country === 'SG') counts.SG++;
+        else counts.OTHER++;
+      });
+      document.getElementById('countALL').innerText = counts.ALL;
+      document.getElementById('countUS').innerText = counts.US;
+      document.getElementById('countJP').innerText = counts.JP;
+      document.getElementById('countHK').innerText = counts.HK;
+      document.getElementById('countSG').innerText = counts.SG;
+      document.getElementById('countOTHER').innerText = counts.OTHER;
+    }
+
+    function updateTestBtnLabel() {
+      const labelText = countryLabels[currentCountryFilter] || '当前分组';
+      const btnTextEl = document.getElementById('testDelaysText');
+      if (btnTextEl && !isTestingDelays) {
+        btnTextEl.innerText = `测速当前分组 [${labelText}]`;
+      }
+    }
+
+    function filterCountry(country) {
+      currentCountryFilter = country;
+      document.querySelectorAll('#countryTabs .tab-btn').forEach(btn => {
+        if (btn.getAttribute('data-country') === country) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      updateTestBtnLabel();
+      renderNodeGrid();
+    }
+
+    function onSearchInput() {
+      currentSearchTerm = document.getElementById('nodeSearchInput').value.trim().toLowerCase();
+      renderNodeGrid();
+    }
+
+    function renderNodeGrid() {
+      const container = document.getElementById('nodeGrid');
+      if (!container) return;
+
+      let filtered = transitNodes.filter(n => {
+        if (currentCountryFilter !== 'ALL') {
+          if (currentCountryFilter === 'US') {
+            // Auto group strictly selects US, so include both AUTO and US in US tab
+            if (n.country !== 'US' && n.country !== 'AUTO') return false;
+          } else if (currentCountryFilter === 'OTHER') {
+            if (['US', 'JP', 'HK', 'SG', 'AUTO'].includes(n.country)) return false;
+          } else if (n.country !== currentCountryFilter) {
+            return false;
+          }
+        }
+        if (currentSearchTerm) {
+          return n.name.toLowerCase().includes(currentSearchTerm);
+        }
+        return true;
+      });
+
+      // Always sort by delay: lowest first, untested (9998) second to last, timeout (9999) at bottom
+      filtered.sort((a, b) => a.delay - b.delay);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 32px;">
+            未找到匹配的前置中继节点
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(node => {
+        const isActive = node.name === currentActiveTransit;
+        let delayBadge = '';
+        if (node.status === 'timeout' || node.delay === 9999) {
+          delayBadge = '<span class="node-delay-badge delay-timeout">🔴 超时</span>';
+        } else if (node.status === 'untested' || node.delay === 9998) {
+          delayBadge = '<span class="node-delay-badge delay-untested">⚪ 未测速</span>';
+        } else if (node.delay < 150) {
+          delayBadge = `<span class="node-delay-badge delay-fast">${node.delay} ms</span>`;
+        } else if (node.delay < 350) {
+          delayBadge = `<span class="node-delay-badge delay-medium">${node.delay} ms</span>`;
+        } else if (node.delay < 700) {
+          delayBadge = `<span class="node-delay-badge delay-slow">${node.delay} ms</span>`;
+        } else {
+          delayBadge = '<span class="node-delay-badge delay-timeout">🔴 超时</span>';
+        }
+
+        return `
+          <div class="node-card ${isActive ? 'active' : ''}" onclick="selectTransitNode('${encodeURIComponent(node.name)}')">
+            <div class="node-top-row">
+              <div class="node-name-wrap" title="${node.name}">
+                <div class="radio-circle"></div>
+                <span>${node.name}</span>${node.name.includes('自动') ? '<span style="font-size:10.5px; color:#38bdf8; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); padding:1px 6px; border-radius:4px; font-weight:normal; margin-left:4px;">仅限美国组</span>' : ''}
+              </div>
+            </div>
+            <div class="node-bottom-row">
+              <span class="node-proto-tag">${node.type}</span>
+              ${delayBadge}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function selectTransitNode(encodedName) {
+      const name = decodeURIComponent(encodedName);
+      if (name === currentActiveTransit) return;
+
+      try {
+        const groupName = '🛡️ 住宅前置中继';
+        const res = await fetch('/proxies/' + encodeURIComponent(groupName), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name })
+        });
+        
+        currentActiveTransit = name;
+        document.getElementById('activeNodeBadge').innerText = '当前中继: ' + name;
+        renderNodeGrid();
+
+        showToast(`🚀 底层前置已切换为: ${name}\n🏡 出口 IP (12.12.110.239) 保持纯净不变`);
+      } catch (err) {
+        console.error('Switch transit node error:', err);
+        showToast('❌ 切换前置节点失败: ' + err.message);
+      }
+    }
+
+    // Test ONLY the current filtered group (saves traffic and executes ultra-fast)
+    async function testGroupDelays(isSilent = false) {
+      if (isTestingDelays) return;
+      isTestingDelays = true;
+
+      const icon = document.getElementById('testDelaysIcon');
+      const text = document.getElementById('testDelaysText');
+      const labelText = countryLabels[currentCountryFilter] || '当前分组';
+      
+      if (icon) icon.classList.add('spinning');
+      if (text) text.innerText = `正在测速 [${labelText}]...`;
+
+      // Filter target nodes to test: ONLY test nodes in current group!
+      const targetNodes = transitNodes.filter(n => {
+        if (currentCountryFilter !== 'ALL') {
+          if (currentCountryFilter === 'OTHER') {
+            if (['US', 'JP', 'HK', 'SG'].includes(n.country)) return false;
+          } else if (n.country !== currentCountryFilter) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      const testUrl = 'http://cp.cloudflare.com/generate_204';
+      const promises = targetNodes.map(async node => {
+        try {
+          const res = await fetch('/proxies/' + encodeURIComponent(node.name) + '/delay?timeout=2500&url=' + encodeURIComponent(testUrl));
+          if (res.ok) {
+            const data = await res.json();
+            if (data.delay && data.delay > 0) {
+              node.delay = data.delay;
+              node.status = 'ok';
+            } else {
+              node.delay = 9999;
+              node.status = 'timeout';
+            }
+          } else {
+            node.delay = 9999;
+            node.status = 'timeout';
+          }
+        } catch (e) {
+          node.delay = 9999;
+          node.status = 'timeout';
+        }
+      });
+
+      await Promise.all(promises);
+
+      isTestingDelays = false;
+      if (icon) icon.classList.remove('spinning');
+      updateTestBtnLabel();
+
+      renderNodeGrid();
+      if (!isSilent) {
+        showToast(`⚡ [${labelText}] 测速完成，组内已按最低延迟升序排列！`);
+      }
+    }
+
+    // Alias for the button
+    function testAllDelays() {
+      testGroupDelays(false);
+    }
+
+    // Call loadTransitNodes on load (test only when user clicks the test button)
+    window.addEventListener('DOMContentLoaded', () => {
+      loadTransitNodes();
+    });
+  </script>
+</body>
+</html>

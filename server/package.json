@@ -1,0 +1,11 @@
+{
+  "name": "pureisp-server",
+  "version": "1.0.0",
+  "description": "PureISP Commercial Backend Service - Dynamic Residential IP Chaining and Dual-Track Routing",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "author": "PureISP Team",
+  "license": "ISC"
+}

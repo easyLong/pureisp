@@ -1,0 +1,9 @@
+{
+  "name": "pureisp-account-service",
+  "version": "1.1.9",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "setup": "node scripts/setup.js", "start": "node --env-file=.env src/main.js", "test": "node --test test/*.test.js", "admin": "node --env-file=.env scripts/admin.js" },
+  "dependencies": { "mysql2": "^3.15.3" }
+}
